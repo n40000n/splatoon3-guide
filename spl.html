@@ -1,3 +1,523 @@
-<!doctype html><meta charset="utf-8">
-<title>テスト</title>
-<body>OK: GitHub Pages 動作中</body>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>スプラトゥーン3 攻略ミニサイト（HTMLだけで動く）</title>
+  <meta name="description" content="HTML + CSS + JS（ローカルストレージ）だけで動く、質問掲示板と武器評価のミニサイト。" />
+  <!-- OGP / SNS共有用 -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="スプラトゥーン3 攻略ミニサイト" />
+  <meta property="og:description" content="武器評価と質問掲示板を誰でも利用できます。スマホからもそのまま使用可。" />
+  <meta property="og:image" content="https://placehold.co/1200x630/png?text=Splatoon3+Guide" />
+  <meta property="og:site_name" content="Splatoon3 Guide" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="canonical" href="" />
+  <meta name="theme-color" content="#0b1220" />
+  <style>
+    :root{
+      --bg:#0b1220;--panel:#121a2b;--accent:#60a5fa;--muted:#a9b1c7;--text:#e5e7eb;--ok:#34d399;--bad:#f87171;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,'Noto Sans JP','Hiragino Kaku Gothic ProN','Yu Gothic UI','Yu Gothic',Meiryo,sans-serif;}
+    header{position:sticky;top:0;z-index:10;background:rgba(11,18,32,.9);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid #1f2a44}
+    .wrap{max-width:1100px;margin-inline:auto;padding:16px}
+    h1{margin:0;font-size:22px}
+    nav{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+    nav button{padding:10px 14px;border:1px solid #22304f;border-radius:10px;background:#111a2d;color:var(--text);cursor:pointer}
+    nav button.active{background:var(--accent);color:#0b1220;border-color:var(--accent)}
+    main{padding:24px 0}
+    .grid{display:grid;gap:16px}
+    @media(min-width:900px){.grid-2{grid-template-columns:1fr 1fr}}
+    .card{background:var(--panel);border:1px solid #1f2a44;border-radius:16px;padding:16px}
+    .muted{color:var(--muted);font-size:14px}
+    label{display:block;font-size:14px;margin:8px 0 6px}
+    input[type=text], textarea, select, input[type=number]{width:100%;padding:10px;border-radius:10px;border:1px solid #22304f;background:#0e1626;color:var(--text)}
+    textarea{min-height:96px;resize:vertical}
+    .row{display:flex;gap:8px;align-items:center}
+    .row > *{flex:1}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #22304f;background:#0e1626;color:var(--text);cursor:pointer}
+    .btn.primary{background:var(--accent);color:#0b1220;border-color:var(--accent)}
+    .tag{display:inline-block;padding:2px 8px;border:1px solid #22304f;border-radius:999px;font-size:12px;margin-right:6px}
+    .list{display:grid;gap:12px}
+    .item{background:#0e1626;border:1px solid #22304f;border-radius:12px;padding:12px}
+    .pill{padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid #22304f}
+    .scorebar{height:8px;border-radius:999px;background:#131c2f;overflow:hidden}
+    .scorebar > span{display:block;height:100%;background:var(--accent)}
+    .danger{color:var(--bad)}
+    .success{color:var(--ok)}
+    .small{font-size:12px}
+    .right{margin-left:auto}
+    .inline{display:inline-flex;gap:6px;align-items:center}
+    details{background:#0f182a;border:1px solid #22304f;border-radius:10px;padding:10px}
+    summary{cursor:pointer}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>スプラトゥーン3 攻略ミニサイト</h1>
+      <div class="muted small">HTMLだけで動くデモ（ローカルストレージ保存）。F5してもデータは残ります。</div>
+      <nav>
+        <button class="tab-btn active" data-tab="weapons">武器評価</button>
+        <button class="tab-btn" data-tab="board">質問掲示板</button>
+        <button class="tab-btn" data-tab="about">サイト方針</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- 武器評価タブ -->
+    <section id="tab-weapons">
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>武器評価の投稿</h2>
+          <form id="weaponForm">
+            <label>武器名</label>
+            <input type="text" name="name" placeholder="例：N-ZAP85" required>
+            <div class="row">
+              <div>
+                <label>系統</label>
+                <input type="text" name="class" placeholder="シューターなど">
+              </div>
+              <div>
+                <label>サブ</label>
+                <input type="text" name="sub" placeholder="キューバン等">
+              </div>
+              <div>
+                <label>スペシャル</label>
+                <input type="text" name="special" placeholder="カニタンク等">
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>キル性能（1-5）</label>
+                <input type="number" name="kill" min="1" max="5" step="1" value="3" required>
+              </div>
+              <div>
+                <label>塗り性能（1-5）</label>
+                <input type="number" name="paint" min="1" max="5" step="1" value="3" required>
+              </div>
+              <div>
+                <label>圧力/射程（1-5）</label>
+                <input type="number" name="rangePower" min="1" max="5" step="1" value="3" required>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>機動力（1-5）</label>
+                <input type="number" name="mobility" min="1" max="5" step="1" value="3" required>
+              </div>
+              <div>
+                <label>扱いやすさ（1-5）</label>
+                <input type="number" name="ease" min="1" max="5" step="1" value="3" required>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>エリア（1-5）</label>
+                <input type="number" name="mode_area" min="1" max="5" step="1" value="3">
+              </div>
+              <div>
+                <label>ヤグラ（1-5）</label>
+                <input type="number" name="mode_tower" min="1" max="5" step="1" value="3">
+              </div>
+              <div>
+                <label>ホコ（1-5）</label>
+                <input type="number" name="mode_rainmaker" min="1" max="5" step="1" value="3">
+              </div>
+              <div>
+                <label>アサリ（1-5）</label>
+                <input type="number" name="mode_clam" min="1" max="5" step="1" value="3">
+              </div>
+            </div>
+
+            <label>強み</label>
+            <textarea name="strengths" placeholder="例：中射程の牽制力、塗りと打開の両立"></textarea>
+            <label>弱み</label>
+            <textarea name="weaknesses" placeholder="例：対高台が苦手、確定数がブレやすい"></textarea>
+
+            <div class="row">
+              <input class="btn" type="reset" value="リセット">
+              <button class="btn primary" type="submit">評価を追加</button>
+            </div>
+            <div class="muted small">※ 総合 = 0.30*キル + 0.20*塗り + 0.20*圧力 + 0.15*機動 + 0.15*扱いやすさ</div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="row" style="gap:12px;align-items:end">
+            <div style="flex:2">
+              <h2>武器一覧</h2>
+            </div>
+            <div class="right inline">
+              <input type="text" id="weaponSearch" placeholder="武器名/サブ/スペで検索" />
+              <select id="sortWeapons">
+                <option value="score_desc">総合スコア（高い順）</option>
+                <option value="score_asc">総合スコア（低い順）</option>
+                <option value="name_asc">名前順</option>
+                <option value="recent">新しい投稿</option>
+              </select>
+            </div>
+          </div>
+          <div id="weaponList" class="list" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 掲示板タブ -->
+    <section id="tab-board" hidden>
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>質問を投稿</h2>
+          <form id="questionForm">
+            <label>タイトル</label>
+            <input type="text" name="title" placeholder="例：エリアで前線維持のコツは？" required>
+            <div class="row">
+              <div>
+                <label>カテゴリ</label>
+                <select name="category">
+                  <option>初心者</option>
+                  <option>ギア</option>
+                  <option>武器</option>
+                  <option>ルール</option>
+                  <option>ステージ</option>
+                  <option>雑談</option>
+                </select>
+              </div>
+              <div>
+                <label>タグ（カンマ区切り 最大5）</label>
+                <input type="text" name="tags" placeholder="例：#エリア,#N-ZAP">
+              </div>
+            </div>
+            <label>本文</label>
+            <textarea name="body" required placeholder="状況（ルール/ステ/武器/編成）を書くと回答が付きやすいです"></textarea>
+            <div class="row">
+              <input class="btn" type="reset" value="リセット">
+              <button class="btn primary" type="submit">投稿する</button>
+            </div>
+            <div id="qWarn" class="muted small"></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="row" style="gap:12px;align-items:end">
+            <div style="flex:2"><h2>質問一覧</h2></div>
+            <div class="right inline">
+              <input type="text" id="qSearch" placeholder="タイトル/本文/タグ検索">
+              <select id="qFilter">
+                <option value="all">すべて</option>
+                <option value="open">未解決</option>
+                <option value="solved">解決済み</option>
+              </select>
+            </div>
+          </div>
+          <div id="qList" class="list" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 方針タブ -->
+    <section id="tab-about" hidden>
+      <div class="card">
+        <h2>サイト方針・投稿ガイドライン</h2>
+        <ul>
+          <li>具体的な状況（ルール/ステージ/武器/編成）を書く。</li>
+          <li>誹謗中傷・晒しは禁止。個人情報は伏せる。</li>
+          <li>ベストアンサーは質問者が選定。質問が解決したら設定をお願いします。</li>
+          <li>不適切語句は自動で警告・非表示になる場合があります。</li>
+        </ul>
+        <p class="muted small">このデモはブラウザのローカルストレージを使用します。別端末/別ブラウザでは共有されません。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap muted small" style="padding-bottom:48px">
+    <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap">
+      <span>共有:</span>
+      <button class="btn small" onclick="share('x')">Xでシェア</button>
+      <button class="btn small" onclick="share('line')">LINEで送る</button>
+      <button class="btn small" onclick="copyLink()">リンクをコピー</button>
+      <span class="muted">（SNSでURLを貼るだけでOGP画像とタイトルが表示されます）</span>
+    </div>
+    <div style="margin-top:10px">© Splatoon3 Mini Site Demo. 非公式ファンメイド。任天堂のガイドラインを尊重します。</div>
+  </footer>
+
+  <script>
+    // ======= 汎用ユーティリティ =======
+    const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+    const uid = () => Math.random().toString(36).slice(2,10);
+    const now = () => new Date().toISOString();
+
+    const store = {
+      get(k, def){ try{ return JSON.parse(localStorage.getItem(k)) ?? def }catch(_){ return def } },
+      set(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+    }
+
+    // NGワード（最低限の例）
+    const NG_WORDS = ["死ね","バカ","晒し","差別" ];
+    const hasNG = (text) => NG_WORDS.some(w => text.includes(w));
+
+    // ======= タブ操作 =======
+    $$(".tab-btn").forEach(btn => btn.addEventListener('click', () => {
+      $$(".tab-btn").forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const t = btn.dataset.tab;
+      $$('#tab-weapons, #tab-board, #tab-about').forEach(s=>s.hidden=true);
+      $('#tab-'+t).hidden=false;
+    }));
+
+    // ======= 武器評価 =======
+    const WEAPON_KEY = 'weapons.v1';
+    let weapons = store.get(WEAPON_KEY, []);
+
+    function weightScore(w){
+      const score = 0.30*w.kill + 0.20*w.paint + 0.20*w.rangePower + 0.15*w.mobility + 0.15*w.ease;
+      return Math.round(score*10)/10; // 0.1刻み
+    }
+
+    function renderWeapon(w){
+      const c = document.createElement('div');
+      c.className = 'item';
+      const score = weightScore(w);
+      c.innerHTML = `
+        <div class="row" style="justify-content:space-between;gap:8px;align-items:start">
+          <div style="flex:2;min-width:220px">
+            <div class="inline" style="gap:10px">
+              <strong style="font-size:16px">${w.name}</strong>
+              <span class="pill">${w.class||'系統不明'}</span>
+              <span class="pill">サブ:${w.sub||'-'}</span>
+              <span class="pill">スペ:${w.special||'-'}</span>
+            </div>
+            <div class="muted small">投稿：${new Date(w.createdAt).toLocaleString()}</div>
+            <div style="margin-top:8px" class="grid" >
+              ${['キル','塗り','圧力','機動','扱い'].map((label,i)=>{
+                const val=[w.kill,w.paint,w.rangePower,w.mobility,w.ease][i];
+                return `<div>
+                  <div class="row" style="justify-content:space-between"><span class="small">${label}</span><span class="small">${val}/5</span></div>
+                  <div class="scorebar"><span style="width:${val/5*100}%"></span></div>
+                </div>`
+              }).join('')}
+            </div>
+          </div>
+          <div style="flex:1;min-width:160px">
+            <div class="row" style="justify-content:space-between;align-items:center">
+              <div><strong>総合：${score}</strong> <span class="muted small">/5</span></div>
+              <button class="btn small" data-del>削除</button>
+            </div>
+            <details style="margin-top:8px"><summary>強い点</summary><div class="small">${(w.strengths||'').replace(/\n/g,'<br>')}</div></details>
+            <details style="margin-top:8px"><summary>弱い点</summary><div class="small">${(w.weaknesses||'').replace(/\n/g,'<br>')}</div></details>
+            <div style="margin-top:8px" class="grid">
+              ${[['エリア','mode_area'],['ヤグラ','mode_tower'],['ホコ','mode_rainmaker'],['アサリ','mode_clam']].map(([lab,key])=>{
+                const v = w[key] ?? '-';
+                return `<div>
+                  <div class="row" style="justify-content:space-between"><span class="small">${lab}</span><span class="small">${v}/5</span></div>
+                  <div class="scorebar"><span style="width:${(v||0)/5*100}%"></span></div>
+                </div>`
+              }).join('')}
+            </div>
+          </div>
+        </div>`;
+      c.querySelector('[data-del]').addEventListener('click', ()=>{
+        if(confirm(`${w.name} の評価を削除しますか？`)){
+          weapons = weapons.filter(x=>x.id!==w.id);
+          store.set(WEAPON_KEY,weapons); renderWeapons();
+        }
+      });
+      return c;
+    }
+
+    function renderWeapons(){
+      const q = $('#weaponSearch').value.trim().toLowerCase();
+      const sort = $('#sortWeapons').value;
+      let list = weapons.filter(w => [w.name,w.sub,w.special,w.class].join(' ').toLowerCase().includes(q));
+      list.sort((a,b)=>{
+        if(sort==='score_desc') return weightScore(b)-weightScore(a);
+        if(sort==='score_asc') return weightScore(a)-weightScore(b);
+        if(sort==='name_asc') return (a.name||'').localeCompare(b.name||'','ja');
+        if(sort==='recent') return new Date(b.createdAt)-new Date(a.createdAt);
+        return 0;
+      });
+      const box = $('#weaponList'); box.innerHTML='';
+      if(!list.length){ box.innerHTML = '<div class="muted">まだ投稿がありません。左のフォームから投稿してください。</div>'; return }
+      list.forEach(w=> box.appendChild(renderWeapon(w)));
+    }
+
+    $('#weaponForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const entry = Object.fromEntries(fd.entries());
+      const fields = ['kill','paint','rangePower','mobility','ease','mode_area','mode_tower','mode_rainmaker','mode_clam'];
+      for(const k of fields){ entry[k] = entry[k] ? Number(entry[k]) : undefined }
+      entry.id = uid(); entry.createdAt = now();
+
+      const textAll = `${entry.name} ${entry.class} ${entry.sub} ${entry.special}\n${entry.strengths||''}\n${entry.weaknesses||''}`;
+      if(hasNG(textAll)){
+        alert('不適切な語句が含まれている可能性があります。内容を見直してください。');
+        return;
+      }
+      weapons.push(entry); store.set(WEAPON_KEY,weapons);
+      e.target.reset(); renderWeapons();
+    });
+
+    $('#weaponSearch').addEventListener('input', renderWeapons);
+    $('#sortWeapons').addEventListener('change', renderWeapons);
+
+    // 初期サンプル
+    if(!weapons.length){
+      weapons = [
+        {id:uid(),name:'N-ZAP85',class:'シューター',sub:'キューバン',special:'エナドリ',kill:3,paint:4,rangePower:3,mobility:4,ease:5,mode_area:5,mode_tower:4,mode_rainmaker:3,mode_clam:4,strengths:'塗りとサポートが両立\n編成合わせやすい',weaknesses:'キル速は平凡\n長射程に圧をかけにくい',createdAt:now()},
+        {id:uid(),name:'スプラシューター',class:'シューター',sub:'クイボ',special:'カニ',kill:4,paint:3,rangePower:3,mobility:4,ease:4,mode_area:4,mode_tower:4,mode_rainmaker:4,mode_clam:3,strengths:'対面性能が高い',weaknesses:'塗りは並',createdAt:now()}
+      ];
+      store.set(WEAPON_KEY,weapons);
+    }
+
+    renderWeapons();
+
+    // ======= 掲示板 =======
+    const Q_KEY = 'questions.v1';
+    let questions = store.get(Q_KEY, []);
+
+    function renderAnswer(a,q){
+      const li = document.createElement('div');
+      li.className='item';
+      li.innerHTML = `
+        <div class="row" style="justify-content:space-between">
+          <div>${a.body.replace(/\n/g,'<br>')}</div>
+          <div class="inline small">
+            <span class="muted">${new Date(a.createdAt).toLocaleString()}</span>
+            ${q.bestAnswerId===a.id ? '<span class="pill success">ベスト</span>' : `<button class="btn small" data-best>ベストにする</button>`}
+          </div>
+        </div>`;
+      const btn = li.querySelector('[data-best]');
+      if(btn){ btn.addEventListener('click', ()=>{
+        q.bestAnswerId = a.id; store.set(Q_KEY,questions); renderQuestions();
+      }); }
+      return li;
+    }
+
+    function renderQuestion(q){
+      const div = document.createElement('div');
+      div.className='item';
+      const tagHtml = (q.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
+      const solved = q.bestAnswerId ? '<span class="pill success">解決済み</span>' : '<span class="pill">未解決</span>';
+      div.innerHTML = `
+        <div class="row" style="justify-content:space-between;gap:8px;align-items:start">
+          <div style="flex:2;min-width:220px">
+            <div class="inline" style="gap:10px">
+              <strong style="font-size:16px">${q.title}</strong>
+              <span class="pill">${q.category}</span>
+              ${solved}
+            </div>
+            <div class="muted small">投稿：${new Date(q.createdAt).toLocaleString()}</div>
+            <p style="margin-top:8px">${q.body.replace(/\n/g,'<br>')}</p>
+            <div>${tagHtml}</div>
+          </div>
+          <div style="flex:1;min-width:160px">
+            <details open>
+              <summary>回答（${q.answers.length}）</summary>
+              <div class="list" data-answers></div>
+              <form data-answerform class="row" style="margin-top:8px">
+                <input type="text" name="body" placeholder="回答を書く" required>
+                <button class="btn" type="submit">送信</button>
+              </form>
+            </details>
+            <div class="row" style="margin-top:8px;justify-content:space-between">
+              <button class="btn small" data-del>質問を削除</button>
+            </div>
+          </div>
+        </div>`;
+
+      // 回答描画
+      const ansBox = div.querySelector('[data-answers]');
+      q.answers.forEach(a=> ansBox.appendChild(renderAnswer(a,q)));
+
+      // 回答投稿
+      div.querySelector('[data-answerform]').addEventListener('submit', e=>{
+        e.preventDefault();
+        const body = new FormData(e.target).get('body').trim();
+        if(!body) return;
+        if(hasNG(body)) { alert('不適切な語句が含まれています。修正してください。'); return; }
+        q.answers.push({id:uid(), body, createdAt:now()});
+        store.set(Q_KEY,questions); renderQuestions();
+      });
+
+      // 質問削除
+      div.querySelector('[data-del]').addEventListener('click', ()=>{
+        if(confirm('この質問を削除しますか？')){
+          questions = questions.filter(x=>x.id!==q.id); store.set(Q_KEY,questions); renderQuestions();
+        }
+      });
+
+      return div;
+    }
+
+    function renderQuestions(){
+      const q = $('#qSearch').value.trim().toLowerCase();
+      const f = $('#qFilter').value;
+      let list = questions.filter(x => `${x.title} ${x.body} ${(x.tags||[]).join(' ')}`.toLowerCase().includes(q));
+      if(f==='open') list = list.filter(x=>!x.bestAnswerId);
+      if(f==='solved') list = list.filter(x=>!!x.bestAnswerId);
+      list.sort((a,b)=> new Date(b.createdAt)-new Date(a.createdAt));
+      const box = $('#qList'); box.innerHTML='';
+      if(!list.length){ box.innerHTML = '<div class="muted">質問がありません。左のフォームから投稿してください。</div>'; return }
+      list.forEach(q=> box.appendChild(renderQuestion(q)));
+    }
+
+    $('#questionForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const title = fd.get('title').trim();
+      const body = fd.get('body').trim();
+      const category = fd.get('category');
+      const tags = (fd.get('tags')||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,5);
+
+      // 重複質問サジェスト（簡易）
+      const similar = questions.find(q=> q.title===title);
+      const warn = $('#qWarn');
+      warn.textContent = similar ? '同じタイトルの質問があります。投稿前に一覧でご確認ください。' : '';
+
+      const textAll = `${title}\n${body}\n${tags.join(' ')}`;
+      if(hasNG(textAll)) { alert('不適切な語句が含まれています。修正してください。'); return; }
+
+      const q = { id:uid(), title, body, category, tags, createdAt:now(), answers:[], bestAnswerId:null };
+      questions.unshift(q); store.set(Q_KEY,questions); e.target.reset(); renderQuestions();
+    });
+
+    $('#qSearch').addEventListener('input', renderQuestions);
+    $('#qFilter').addEventListener('change', renderQuestions);
+
+    // 初期サンプル
+    if(!questions.length){
+      questions = [
+        {id:uid(),title:'エリアでカウントを進める塗りのコツは？',body:'前線が下がり気味の時、どのタイミングで前へ出るべき？編成はN-ZAP, スシ, スピナー, ハイドラ。',category:'ルール',tags:['#エリア','#塗り'],createdAt:now(),answers:[{id:uid(),body:'エナドリ回し前提で、抑えでは左高台へ一人割き圧を継続。エリア外周を先に塗って敵の侵入ルートを削ると維持しやすいです。',createdAt:now()}],bestAnswerId:null},
+      ];
+      store.set(Q_KEY,questions);
+    }
+
+    renderQuestions();
+    // ======= 共有（SNS / Web Share API） =======
+    function currentUrl(){
+      // canonicalが設定されたらそれを優先
+      const link = document.querySelector('link[rel=canonical]');
+      return (link && link.href) ? link.href : location.href;
+    }
+    function share(service){
+      const url = encodeURIComponent(currentUrl());
+      const text = encodeURIComponent('スプラトゥーン3 攻略ミニサイト（武器評価・質問掲示板）');
+      let shareUrl = '';
+      if(service==='x') shareUrl = `https://x.com/intent/tweet?url=${url}&text=${text}`;
+      if(service==='line') shareUrl = `https://line.me/R/msg/text/?${text}%20${url}`;
+      if(shareUrl) window.open(shareUrl, '_blank');
+    }
+    async function copyLink(){
+      try{ await navigator.clipboard.writeText(currentUrl()); alert('ページURLをコピーしました'); }catch(_){
+        const t = document.createElement('input'); t.value=currentUrl(); document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); alert('ページURLをコピーしました');
+      }
+    }
+  </script>
+</body>
+</html>
